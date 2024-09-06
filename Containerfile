@@ -82,5 +82,8 @@ VOLUME /var/lib/p2pool
 # Expose ports
 EXPOSE $ports
 
+# Set working directory to /home/nonroot since p2pool will write the peer list to the working directory
+WORKDIR /home/nonroot
+
 # Run entrypoint
 ENTRYPOINT ["/usr/local/bin/p2pool", "--data-api", "/var/lib/p2pool"]
