@@ -14,7 +14,6 @@ ARG ports="3333 37888 37889"
 ARG build_dir=/tmp/build
 ARG license_dir=$build_dir/licenses
 ARG dist_dir=$build_dir/dist
-ARG data_dir=/var/lib/p2pool
 
 
 ########################################################################################################################
