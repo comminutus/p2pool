@@ -73,7 +73,7 @@ ARG dist_dir ports
 
 # Install binaries
 COPY --from=build $dist_dir /usr/local/bin
-COPY --from=build $license_dir /usr/local/share/licenses/monero
+COPY --from=build $license_dir /usr/local/share/licenses/p2pool
 
 # Setup a volume for persistent data
 VOLUME /var/lib/p2pool
