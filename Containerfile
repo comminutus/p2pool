@@ -69,7 +69,7 @@ RUN cp archive/LICENSE $license_dir/P2POOL_LICENSE
 # Final image
 ########################################################################################################################
 FROM cgr.dev/chainguard/glibc-dynamic as final
-ARG dist_dir ports
+ARG dist_dir license_dir orts
 
 # Install binaries
 COPY --from=build $dist_dir /usr/local/bin
