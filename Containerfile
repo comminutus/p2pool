@@ -2,7 +2,7 @@
 # Configuration
 ########################################################################################################################
 # Core Config
-ARG p2pool_version=4.1
+ARG p2pool_version=4.1.1
 
 # Ports:
 # 3333: Stratum server (port used for miners to communicate with p2pool)
@@ -21,54 +21,29 @@ ARG dist_dir=$build_dir/dist
 ########################################################################################################################
 FROM cgr.dev/chainguard/wolfi-base:latest as build
 ARG build_dir license_dir dist_dir p2pool_version
-ARG base_archive_url=https://github.com/SChernykh/p2pool/releases/download/v${p2pool_version}
-
-# Options for tools
-ARG build_packages='gpg gpg-agent wget'
-ARG gpg='gpg --batch'
-ARG wget='wget -q'
+ARG base_archive_url="https://github.com/SChernykh/p2pool/releases/download/v${p2pool_version}"
 
 # Copy assets
 WORKDIR $build_dir
 COPY SChernykh.asc .
 COPY LICENSE $license_dir/
+COPY download.bash .
+
+# Setup environment variables for script
+ENV BASE_ARCHIVE_URL="$base_archive_url"
+ENV DIST_DIR="$dist_dir"
+ENV P2POOL_VERSION="$p2pool_version"
 
 # Install build packages
-RUN apk add $build_packages
-
-# Download SHA-256 hashes and signatures; verify signatures
-RUN $gpg --import SChernykh.asc
-RUN $wget $base_archive_url/sha256sums.txt.asc
-RUN $gpg --verify sha256sums.txt.asc
-
-# Setup metadata about archive
-RUN set -ex                                                         && \
-  platform="$(uname -a | awk '{print tolower($1)}')"                && \
-  echo "$platform" > platform.txt                                   && \
-  arch="$(uname -m | sed 's/x86_64/x64/g')"                         && \
-  echo "$arch" > arch.txt                                           && \
-  archive="p2pool-v${p2pool_version}-$platform-$arch.tar.gz"        && \
-  echo "$archive" > archive.txt
-
-# Download archive
-RUN $wget "$base_archive_url/$(cat archive.txt)"
-
-# Verify archive
-RUN echo "$(cat sha256sums.txt.asc | grep $(cat archive.txt) -A 2 | sed -n '3p' | sed 's/\r$//' | awk '{print tolower($2)}') $(cat archive.txt)" | sha256sum -c
-
-# Extract archive
-RUN mkdir -p "$dist_dir" archive
-RUN tar -x --strip-components 1 -C archive -f "$(cat archive.txt)"
-RUN cp archive/p2pool "$dist_dir"
-
-# Copy p2pool license file
-RUN cp archive/LICENSE $license_dir/P2POOL_LICENSE
+RUN apk add --no-cache bash gpg gpg-agent wget          && \
+    ./download.bash                                     && \
+    cp archive/LICENSE "${license_dir}/P2POOL_LICENSE"
 
 
 ########################################################################################################################
 # Final image
 ########################################################################################################################
-FROM cgr.dev/chainguard/glibc-dynamic as final
+FROM cgr.dev/chainguard/glibc-dynamic:latest as final
 ARG dist_dir license_dir ports
 
 # Install binaries
